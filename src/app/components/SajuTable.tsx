@@ -1,8 +1,11 @@
+// components/SajuTable.tsx
+
 import React from "react";
 
 const cellBaseStyles =
   "flex min-h-[70px] flex-col items-center justify-center border-l border-t border-gray-600 text-center";
 
+// DataCell: 반응형 패딩 적용 (p-1 sm:p-2)
 interface DataCellProps {
   children: React.ReactNode;
   className?: string;
@@ -42,6 +45,7 @@ const TimeHeader: React.FC<TimeHeaderProps> = ({ children }) => (
   </div>
 );
 
+// CharBox: 반응형 크기 및 폰트 크기 적용
 interface CharBoxProps {
   mainChar: string;
   subText: string;
@@ -58,9 +62,13 @@ const CharBox: React.FC<CharBoxProps> = ({ mainChar, subText, bgColor }) => (
   </div>
 );
 
+// Allow both string and object formats for values
+// String values will be treated as { main: value, sub: "" } in the render function
+type RenderValueType = string | { main: string; sub: string } | "complex" | null;
+
 interface SajuRowData {
   category: { main: string; sub?: string };
-  values: (string | { main: string; sub: string } | null)[];
+  values: RenderValueType[];
 }
 
 interface SajuTableProps {
@@ -97,6 +105,7 @@ const createDefaultData = () => {
   };
 };
 
+// --- 메인 컴포넌트 ---
 const SajuTable: React.FC<SajuTableProps> = ({ userName = "OO", sajuData }) => {
   const data = sajuData || createDefaultData();
   const { dateInfo, pillars, details } = data;
@@ -108,18 +117,13 @@ const SajuTable: React.FC<SajuTableProps> = ({ userName = "OO", sajuData }) => {
     year: { gan: "", ji: "" },
   };
 
-  const renderValue = (value: any) => {
+  type RenderValueType = string | { main: string; sub: string } | "complex" | null;
+
+  const renderValue = (value: RenderValueType) => {
     if (value === null) {
       return <span className="text-gray-400">(없음)</span>;
     }
-    if (typeof value === "object" && value.main) {
-      return (
-        <>
-          <span className="text-lg">{value.main}</span>
-          <span className="text-xs">{value.sub}</span>
-        </>
-      );
-    }
+    
     if (value === "complex") {
       return (
         <div className="flex flex-col text-sm">
@@ -129,7 +133,18 @@ const SajuTable: React.FC<SajuTableProps> = ({ userName = "OO", sajuData }) => {
         </div>
       );
     }
-    return null;
+    
+    if (typeof value === 'string') {
+      return <div className="text-center">{value}</div>;
+    }
+    
+    // At this point, TypeScript knows value must be { main: string; sub: string }
+    return (
+      <div className="flex flex-col items-center">
+        <span className="text-lg">{value.main}</span>
+        {value.sub && <span className="text-xs">{value.sub}</span>}
+      </div>
+    );
   };
 
   return (
